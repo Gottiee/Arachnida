@@ -9,28 +9,58 @@ def download_img(path, opt):
     res = requests.get(url, stream=True)
     slash = path.rfind("/")
     path = path[slash + 1:]
+    files_in_directory = os.listdir(opt.path)
+    if path in files_in_directory:
+        return 
     path = urljoin(opt.path, path)
+    if not(path.endswith(".jpg") or path.endswith(".jpeg") or path.endswith(".png") or path.endswith("gif") or path.endswith(".bmp")):
+        return
     if res.status_code == 200:
+        print(f"downloading {url}")
         with open(path, "wb") as file:
             file.write(res.content)
 
-def scrap(opt):
-    res = requests.get(opt.url)
-    print(f"Request status code: {res.status_code}")
-    data = bs(res.text, 'html.parser')
+def down(data, opt):
     imgs = data.find_all('img')
-
-    if not os.path.exists(opt.path):
-        os.mkdir(opt.path)
-
     src_list = []
     for img in imgs:
         src = img.get('src')
         if src:
             src_list.append(src)
-    print(f"Soure list : {src_list}")
     for src in src_list:
         download_img(src, opt)
+    return 
+
+
+def scrap(opt, url: str, lst: list[str], time: int):
+    if opt.l == True:
+        if opt.N == time:
+            return
+    try:
+        res = requests.get(url, timeout=1, stream=True)
+    except requests.exceptions.Timeout:
+        return
+    if res.status_code != 200:
+        return 
+    data = bs(res.text, 'html.parser')
+
+    if not os.path.exists(opt.path):
+        os.mkdir(opt.path)
+
+    if opt.r == True: 
+        a_tags = data.find_all("a")
+        if len(a_tags) == 0:
+            return
+        for a in a_tags:
+            href = a.get('href')
+            new_url = urljoin(url, href)
+            if not (href.startswith("http") or new_url == url or href.startswith("#")):
+                if new_url in lst:
+                    return
+                print(f"going to : {new_url}")
+                lst.append(new_url)
+                down(data, opt)
+                scrap(opt, new_url, lst, time + 1)
 
 def main():
     """
@@ -46,7 +76,7 @@ Spider allow you to extract all the images form a website, recursively, by provi
     """
     option = argv_handler()
     print("Option seleted : ", option)
-    scrap(option)
+    scrap(option, option.url, [option.url], 0)
 
 if __name__ == "__main__":
     main()
