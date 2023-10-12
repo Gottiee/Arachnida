@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+
 import os
-from argv import *
+from argv_handle import *
 import requests
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urljoin
