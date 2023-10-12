@@ -4,6 +4,9 @@ import requests
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urljoin
 
+global level
+level = 0
+
 def download_img(path, opt):
     url =  urljoin(opt.url, path)
     res = requests.get(url, stream=True)
@@ -12,7 +15,7 @@ def download_img(path, opt):
     files_in_directory = os.listdir(opt.path)
     if path in files_in_directory:
         return 
-    path = urljoin(opt.path, path)
+    path = os.path.join(opt.path, path)
     if not(path.endswith(".jpg") or path.endswith(".jpeg") or path.endswith(".png") or path.endswith("gif") or path.endswith(".bmp")):
         return
     if res.status_code == 200:
@@ -32,14 +35,15 @@ def down(data, opt):
     return 
 
 
-def scrap(opt, url: str, lst: list[str], time: int):
-    if opt.l == True:
-        if opt.N == time:
-            return
+def scrap(opt, url: str, lst: list[str]):
+    global level
+    print(f"going to : {url}")
     try:
         res = requests.get(url, timeout=1, stream=True)
     except requests.exceptions.Timeout:
         return
+    except Exception as e:
+        error_arg(f"{e}")
     if res.status_code != 200:
         return 
     data = bs(res.text, 'html.parser')
@@ -57,10 +61,13 @@ def scrap(opt, url: str, lst: list[str], time: int):
             if not (href.startswith("http") or new_url == url or href.startswith("#")):
                 if new_url in lst:
                     return
-                print(f"going to : {new_url}")
+                level += 1
                 lst.append(new_url)
                 down(data, opt)
-                scrap(opt, new_url, lst, time + 1)
+                if opt.l == True:
+                    if opt.N < level:
+                        return 
+                scrap(opt, new_url, lst)
 
 def main():
     """
@@ -76,7 +83,7 @@ Spider allow you to extract all the images form a website, recursively, by provi
     """
     option = argv_handler()
     print("Option seleted : ", option)
-    scrap(option, option.url, [option.url], 0)
+    scrap(option, option.url, [option.url])
 
 if __name__ == "__main__":
     main()
