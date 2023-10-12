@@ -79,7 +79,5 @@ def managed_option() -> option:
 def argv_handler() -> option:
     if len(argv) < 2:
         error_arg(f"{main.__doc__}")
-    # if len(argv) == 2:
-    #     return option(argv[1])
     else: 
         return managed_option()
