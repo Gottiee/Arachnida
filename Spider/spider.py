@@ -53,6 +53,7 @@ def scrap(opt, url: str, lst: list[str]):
     if not os.path.exists(opt.path):
         os.mkdir(opt.path)
 
+    down(data, opt)
     if opt.r == True: 
         a_tags = data.find_all("a")
         if len(a_tags) == 0:
@@ -65,7 +66,6 @@ def scrap(opt, url: str, lst: list[str]):
                     return
                 level += 1
                 lst.append(new_url)
-                down(data, opt)
                 if opt.l == True:
                     if opt.N < level:
                         return 
